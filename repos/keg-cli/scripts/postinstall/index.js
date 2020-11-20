@@ -1,15 +1,13 @@
 const path = require('path')
 const rootDir = path.join(__dirname, '../../')
-const bashIndex = path.join(rootDir, 'keg')
-const nodeIndex = path.join(rootDir, 'keg-cli')
 const { makeExecutable } = require('./makeExecutable')
 
 ;(async () => {
 
   // Makes <root_dir>/keg executable
-  await makeExecutable(bashIndex)
+  await makeExecutable(rootDir, 'keg')
 
   // Makes <root_dir>/keg-cli executable
-  await makeExecutable(nodeIndex)
+  await makeExecutable(rootDir, 'keg-cli')
 
 })()

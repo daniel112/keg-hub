@@ -7,11 +7,13 @@
   "author": "Lance Tipton",
   "license": "MIT",
   "bin": {
-    "keg": "./keg",
-    "keg-cli": "./keg-cli"
+    "keg": "./keg"
   },
   "files": [
+    "containers/",
+    "scripts/",
     "./keg",
+    "./keg-cli",
     "src/"
   ],
   "preferGlobal": true,
@@ -46,6 +48,7 @@
     "qrcode-terminal": "0.12.0",
     "rimraf": "2.6.3",
     "semver": "^7.3.2",
+    "shelljs": "^0.8.4",
     "write-yaml-file": "4.0.0"
   },
   "devDependencies": {
