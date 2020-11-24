@@ -1,13 +1,16 @@
-
 const globalConfig = global.getGlobalCliConfig()
 const testTask = global.getTask()
+const unloadEnvs = global.loadMockEnvs()
 
 const { buildContainerContext } = require('../buildContainerContext')
 
 describe('buildContainerContext', () => {
 
-  afterAll(() => jest.resetAllMocks())
-  
+  afterAll(() => {
+    jest.resetAllMocks()
+    unloadEnvs()
+  })
+
   it('should return an object with keys cmdContext, contextEnvs, location, and tap', async () => {
 
     const res = await buildContainerContext({

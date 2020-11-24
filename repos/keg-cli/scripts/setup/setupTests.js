@@ -15,6 +15,18 @@ global.cliTasks = Tasks
 global.getTask = getTask
 global.testMocks = global.testMocks || {}
 
+global.loadMockEnvs = (envs={}) => {
+  const originalEnvs = { ...process.env }
+
+  const mockEnvs = { ...require('KegMocks/helpers/mockEnvs'), ...envs}
+  Object.assign(process.env, mockEnvs)
+
+  return () => {
+    process.env = originalEnvs
+  }
+
+}
+
 // Setup our cache holder
 global.getGlobalCliConfig = reset => {
   if(reset) delete require.cache[require.resolve('KegMocks/helpers/globalConfig')]

@@ -1,6 +1,6 @@
 const path = require('path')
 const { KEG_ENVS } = require('../envs')
-const { PREFIXED } = require('./machine')
+const { PREFIXED } = require('./domainEnvs')
 const { loadValuesFiles, loadEnvFiles } = require('./loaders')
 const { containersPath, images } = require('./values')
 const { defineProperty } = require('../../utils/helpers/defineProperty')

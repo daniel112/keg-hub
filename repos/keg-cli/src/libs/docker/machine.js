@@ -1,11 +1,11 @@
 const { executeCmd } = require('KegProc')
 const { get, isStr } = require('@keg-hub/jsutils')
 const { apiError } = require('./helpers')
-const { MACHINE } = require('KegConst/docker/machine')
-const { NAME } = MACHINE
+const { DOMAIN_ENVS } = require('KegConst/docker/domainEnvs')
+const { NAME } = DOMAIN_ENVS
 
 /**
- * Gets the Ip address of the virtual machine running the docker contianer
+ * Gets the Ip address of the virtual machine running the docker container
  * This is the address the should be used to visit the website
  * This is also the address the react-native packager serves content from
  *
@@ -20,7 +20,7 @@ const getIP = async () => {
 
 /*
  * Sets up the docker-machine env
- * Same as running eval "$(docker-machine env ${ get(DOCKER, `MACHINE.NAME`) })"
+ * Same as running eval "$(docker-machine env ${ get(DOCKER, `DOMAIN_ENVS.NAME`) })"
  *
  * @returns {string} - ENVs for docker machine
 */

@@ -10,7 +10,7 @@ const {
 } = require('./values')
 
 const DOCKER = {
-  ...require('./machine'),
+  ...require('./domainEnvs'),
   ...require('./volumes'),
   IMAGES: images,
   CLI_KEY_MAP: cliKeyMap,

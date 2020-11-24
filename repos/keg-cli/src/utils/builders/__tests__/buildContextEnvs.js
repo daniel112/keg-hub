@@ -1,12 +1,16 @@
 
 const globalConfig = global.getGlobalCliConfig()
 const testTask = global.getTask()
+const unloadEnvs = global.loadMockEnvs()
 
 const { buildContextEnvs } = require('../buildContextEnvs')
 
 describe('buildContextEnvs', () => {
 
-  afterAll(() => jest.resetAllMocks())
+  afterAll(() => {
+    jest.resetAllMocks()
+    unloadEnvs()
+  })
   
   it('Should build the container context envs for the base container', async () => {
 

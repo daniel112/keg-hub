@@ -20,7 +20,7 @@ const machineEnvs = loadENV({
 module.exports = deepFreeze({
   PREFIXED: machineEnvs,
   // Use the same ENV file as the setup script, but remove the KEG_DOCKER_ prefix
-  MACHINE: reduceObj(machineEnvs, (key, value, cleaned) => {
+  DOMAIN_ENVS: reduceObj(machineEnvs, (key, value, cleaned) => {
     cleaned[key.replace('KEG_DOCKER_', '')] = value
 
     return cleaned

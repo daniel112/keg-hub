@@ -23,6 +23,7 @@ module.exports = {
         hub: "keg-hub",
         rc: 'tap-release-client',
       },
+      publicToken: '123456789',
       sshKey: path.join(homeDir, '.ssh/github'),
       key: '123456789'
     },
