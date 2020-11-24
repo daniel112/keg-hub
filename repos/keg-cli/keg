@@ -1,123 +1,108 @@
-#!/bin/bash 
-
-# Finds the root path of the keg-cli
-# Works when the Keg-CLI installed in the keg-hub/repos and is symlinked into the /usr/local/bin
-keg_resolve_cli_root_path(){
-  local RESOLVED_PATH
-  local SOURCE="${BASH_SOURCE[0]}"
-  # Resolve $SOURCE until the file is no longer a symlink
-  while [ -h "$SOURCE" ]; do
-    RESOLVED_PATH="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-    SOURCE="$(readlink "$SOURCE")"
-    # If $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-    [[ $SOURCE != /* ]] && SOURCE="$RESOLVED_PATH/$SOURCE"
-  done
-  RESOLVED_PATH="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-  echo "$RESOLVED_PATH"
-}
-
-# Check if the keg root dir has been set. If not, then set it
-if [[ -z "$KEG_CLI_PATH" ]]; then
-  # Set the KEG-CLI path based on the keg root directory
-  export KEG_CLI_PATH=$(keg_resolve_cli_root_path)
-fi
-
-if [[ -z "$KEG_ROOT_DIR" ]]; then
-  # Set the KEG ROOT DIR path based on the keg cli directory
-  # Works when the Keg-CLI installed in the keg-hub/repos and is symlinked into the /usr/local/bin
-  # Will need to work out other ways to find it when
-  export KEG_ROOT_DIR="$(dirname "$(dirname "$KEG_CLI_PATH")")"
-fi
-
-# Prints message to stderr so we can do returns with echo to stdout
-keg_message(){
-  echo "[ KEG CLI ] $@" >&2
-  return
-}
-
-# Navigates to a directory based on the passed in params
-keg_cli_move_directory(){
-  local CMD_OUTPUT
-
-  # If no arguments, then $KEG_DOCKER_NAME to keg path
-  if [[ "$#" == "0" ]]; then
-    CMD_OUTPUT="$(node $KEG_CLI_PATH/scripts/cli/getConfigPath.js keg)"
-  else
-    CMD_OUTPUT="$(node $KEG_CLI_PATH/scripts/cli/getConfigPath.js $@)"
-  fi
-
-  # Convert the ouput to an array
-  IFS=$'\n'
-  local OUTPUT_ARR=($CMD_OUTPUT)
-  unset IFS
-
-  # Get the second line containing the path to move to
-  local MOVE_TO_PATH="${OUTPUT_ARR[1]}"
-
-  if [[ "$MOVE_TO_PATH" ]]; then
-    echo "${OUTPUT_ARR[0]}"
-    cd $MOVE_TO_PATH
-    echo ""
-    return 0
-  fi
-
-  return 1
-}
-
-# Auto loads the GIT_KEY and docker-machine envs
-keg_auto_load_envs(){
-  # Check if $KEG_DOCKER_NAME is already loaded
-  if [[ -z "$KEG_DOCKER_NAME" ]]; then
-    local KEG_DM_ENVS=$KEG_CLI_PATH/scripts/docker/docker-desktop.env
-    # Ensure the file exists
-    if [[ -f "$KEG_DM_ENVS" ]]; then
-      # Load the docker-machine ENVs, but route the output to dev/null
-      # This way nothing is printed to the terminal
-      set -o allexport
-      source $KEG_DM_ENVS >/dev/null 2>&1
-      set +o allexport
-    fi
-  fi
-
-  # Set the keg auto loaded to true, so we don't call the auto load again
-  # for any future keg-cli commands
-  export KEG_ENV_LOADED="loaded"
-
-  return
-}
+#!/usr/bin/env bash
 
 # Opening to the keg cli
-# For navigation commands, calls keg_cli_move_directory
-# All other commands call keg-cli node script
+# For navigation commands calls node script to load the path from keg.config.json
+# All other commands call the root keg-cli node script
 keg(){
+
+  # Check if the keg-cli root dir has been set
+  # If not set, then this code will find the root path based on the BASH_SOURCE[0] argument
+  # Works when the Keg-CLI installed in the keg-hub/repos and is symlinked into the /usr/local/bin
+  if [[ -z "$KEG_CLI_PATH" ]]; then
+    # Get the KEG-CLI path based on the keg root directory
+    local SOURCE="${BASH_SOURCE[0]}"
+    # Resolve $SOURCE until the file is no longer a symlink
+    while [ -h "$SOURCE" ]; do
+      KEG_CLI_PATH="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+      SOURCE="$(readlink "$SOURCE")"
+      # If $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+      [[ $SOURCE != /* ]] && SOURCE="$KEG_CLI_PATH/$SOURCE"
+    done
+    KEG_CLI_PATH="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+    export KEG_CLI_PATH
+  fi
 
   # Check if reloading the bash portion of the keg cli
   if [[ "$1" == "reload" || "$1" == "rl" || "$1" == "src" ]] && [[ -z "$2" ]]; then
     # Reload this bash script
-    keg_message "Reloading Keg CLI..."
+    echo "[ KEG CLI ] Reloading Keg CLI..." >&2
     source $KEG_CLI_PATH/keg
     return
 
-  # export the git key for the current terminal session
+  # Setup a symlink for the keg-cli
+  # Allows developing on the keg-cli from to repo and not the globally installed module
+  elif [[ "$1" == "dev" ]] && [[ "$2" == "symlink" || "$2" == "sym" ]]; then
+    local YARN_GLOBAL_DIR="$(yarn global dir)"
+
+    echo "[ KEG CLI ] Creating symlink for local keg-cli development..." >&2
+    # Remove the old symlink, and create a new one linked to the repo file
+    rm -rf $YARN_GLOBAL_DIR/node_modules/.bin/keg
+    # TODO: Update $KEG_CLI_PATH to be the locally installed version keg KEG-CLI
+    # Unless the symlink already exists, it will point to the globally installed version
+    # Which will just re-create the old symlink
+    ln -s $KEG_CLI_PATH/keg $YARN_GLOBAL_DIR/node_modules/.bin/keg
+
+    return 0
+
+  # Shortcut to navigate to the users home directory
   elif [[ "$1" == "home" || "$1" == "hm" ]] && [[ -z "$2" ]]; then
     cd ~/
-    return
+    return 0
+  
+  # Check to navigate to a custom keg path ( internal app || linked taps )
+  # Only run this code if 1 or less arguments are passed
   elif [[ "$#" == "0" || "$#" == "1" ]]; then
-    keg_cli_move_directory $@
 
-    # Get the return code from the move dir command
-    local KEG_MOVE_DIR=$?
-    if [[ "$KEG_MOVE_DIR" == 0 ]]; then
+    local CMD_OUTPUT
+    # If no arguments, get the root keg path
+    if [[ "$#" == "0" ]]; then
+      CMD_OUTPUT="$(node $KEG_CLI_PATH/scripts/cli/getConfigPath.js keg)"
+    else
+      CMD_OUTPUT="$(node $KEG_CLI_PATH/scripts/cli/getConfigPath.js $@)"
+    fi
+
+    # Convert the ouput to an array
+    IFS=$'\n'
+    local OUTPUT_ARR=($CMD_OUTPUT)
+    unset IFS
+
+    # Get the second line containing the path to move to
+    local MOVE_TO_PATH="${OUTPUT_ARR[1]}"
+
+    # If we have a path to move to
+    # Do the move, then return so we don't run any other code
+    if [[ "$MOVE_TO_PATH" ]]; then
+      echo "${OUTPUT_ARR[0]}"
+      cd $MOVE_TO_PATH
+      echo ""
       return 0
     fi
   fi
 
+  # Auto load the envs before running the keg-cli cmd
+  # Ensures any required keg-cli ENV's are loaded
   if [[ -z "$KEG_ENV_LOADED" ]]; then
-    # Auto load the envs before running the keg-cli cmd
-    keg_auto_load_envs
+    # Check if $KEG_DOCKER_NAME is already loaded
+    if [[ -z "$KEG_DOCKER_NAME" ]]; then
+      local KEG_DM_ENVS=$KEG_CLI_PATH/scripts/docker/docker-desktop.env
+      # Ensure the file exists
+      if [[ -f "$KEG_DM_ENVS" ]]; then
+        # Load the docker ENVs, but route the output to dev/null
+        # This way nothing is printed to the terminal
+        set -o allexport
+        source $KEG_DM_ENVS >/dev/null 2>&1
+        set +o allexport
+      fi
+    fi
+
+    # Set the keg auto loaded to true, so we don't call the auto load again
+    # for any future keg-cli commands
+    export KEG_ENV_LOADED="loaded"
   fi
 
   # All other commands get passed on to the node keg-cli script
   node $KEG_CLI_PATH/keg-cli $@
+
+  return 0
 }
