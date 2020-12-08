@@ -1,11 +1,45 @@
+const { Logger } = require('KegLog')
 const { getTask } = require('./getTask')
-const { get } = require('@keg-hub/jsutils')
 const { validateTask } = require('./validateTask')
+const { get, isFunc, isObj } = require('@keg-hub/jsutils')
 const { parseArgs } = require('KegUtils/helpers/parseArgs')
 const { GLOBAL_CONFIG_PATHS } = require('KegConst/constants')
 const { hasHelpArg } = require('KegUtils/helpers/hasHelpArg')
 const { injectService } = require('../services/injectService')
 const { TAP_LINKS } = GLOBAL_CONFIG_PATHS
+
+/**
+ * Gets the custom tasks from the tap
+ * @function
+ * @param {Object} args.globalConfig - Global CLI config
+ * @param {Object} args.tasks - All CLI registered tasks
+ * @param {string} args.command - Command to run
+ * @param {Array} args.options - Command options passed in from the command line
+ * @param {string} tasksPath - Path to the task index file 
+ *
+ * @returns {Object} - Found custom tasks
+ */
+const getInjectedTasks = async (args, taskFile) => {
+  try {
+    const loaded = require(taskFile)
+    const tasks = isFunc(loaded)
+      ? await loaded(args)
+      : loaded
+
+    return { ...args.tasks, ...tasks }
+
+  }
+  catch(err){
+
+    Logger.empty()
+    Logger.warn(`Error loading custom tasks from path ${taskFile}`)
+    Logger.error(err.message)
+    Logger.empty()
+
+    process.exit(1)
+  }
+}
+
 /**
  * Checks if the command is a linked tap, and if so, calls the tap command on that tap
  * @function
@@ -18,22 +52,34 @@ const { TAP_LINKS } = GLOBAL_CONFIG_PATHS
  */
 const checkLinkedTaps = async (globalConfig, tasks, command, options) => {
 
-  const tapPath = get(globalConfig, `${ TAP_LINKS }.${ command }.path`)
+  const tapObj = get(globalConfig, `${ TAP_LINKS }.${ command }`)
+
   // If no tap path was found, we have no task, so just return
-  if(!tapPath) return false
+  if(!tapObj || !tapObj.path) return false
+
+  // Load in the injected tasks
+  const allTasks = !tapObj.tasks
+    ? tasks
+    : await getInjectedTasks({
+        globalConfig,
+        tasks,
+        command,
+        options
+      }, tapObj.tasks)
 
   // Create a copy of the options so we don't modify the original
   options = [ ...options ]
 
   // Call getTask, and set the command to be tap
-  const taskData = getTask(tasks, 'tap', ...options)
+  const taskData = getTask(allTasks, 'tap', ...options)
 
   // Get the params now instead of in executeTask
   // This way we can make all tap modification in one place
-  taskData.params = await parseArgs(
-    { ...taskData, command, params: { tap: command } },
-    globalConfig
-  )
+  taskData.params = await parseArgs({
+      ...taskData,
+      command,
+      params: { tap: command }
+    }, globalConfig)
 
   // Add the tap as the second-to-last option incase last option is the help option
   taskData.options.splice(taskData.options.length - 1, 0, `tap=${ command }`)
@@ -45,7 +91,7 @@ const checkLinkedTaps = async (globalConfig, tasks, command, options) => {
     : await injectService({
         taskData,
         app: command,
-        injectPath: tapPath,
+        injectPath: tapObj.path,
       })
 }
 

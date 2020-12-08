@@ -1,8 +1,11 @@
+const path = require('path')
 const { Logger } = require('KegLog')
-const { get, set, isObj } = require('@keg-hub/jsutils')
 const { ask } = require('@keg-hub/ask-it')
+const { get, set, isObj } = require('@keg-hub/jsutils')
 const { GLOBAL_CONFIG_PATHS } = require('KegConst/constants')
 const { addGlobalConfigProp, getTapPath } = require('KegUtils')
+const { findPathByName } = require('KegUtils/helpers/findPathByName')
+const { checkPathExists } = require('KegUtils/helpers/checkPathExists')
 
 /**
  * Checks if the link already exists, and if it does asks if the user wants to overwrite
@@ -11,24 +14,23 @@ const { addGlobalConfigProp, getTapPath } = require('KegUtils')
  *
  * @returns {boolean} - If the link should be added
  */
-const ensureAddLink = async (globalConfig, tapName, silent) => {
-  const exists = getTapPath(globalConfig, tapName)
-  return exists
-    ? !silent && ask.confirm(`Overwrite tap link '${tapName}' => '${exists}'?`)
+const ensureAddLink = async (currentTap, tapName, tapPath, silent) => {
+  return currentTap && tapPath
+    ? !silent && ask.confirm(`Overwrite tap link '${tapName}' => '${tapPath}'?`)
     : true
 }
-
 
 /**
  * Adds the tap link to the global config object and saves it
  * @param {Object} globalConfig - Global config object for the keg-cli
- * @param {string} linkPath - Path in the global config were the link is saved
  * @param {string} name - Name of the tap to link
- * @param {string} path - Path to the tap repo on the local HDD
+ * @param {Object} tapObj - Config object for the linked tap
+ * @param {string} tapObj.path - Path to the linked tap repo
+ * @param {string} tapObj.tasks - Path to the custom tasks file 
  *
  * @returns {void}
  */
-const addTapLink = (globalConfig, name, path) => {
+const addTapLink = (globalConfig, name, tapObj) => {
 
   // Ensure the path to save tap links exists
   !isObj(get(globalConfig, GLOBAL_CONFIG_PATHS.TAP_LINKS)) &&
@@ -39,15 +41,80 @@ const addTapLink = (globalConfig, name, path) => {
     globalConfig,
       // Build the path in the globalConfig where the link will be saved
     `${GLOBAL_CONFIG_PATHS.TAP_LINKS}.${name}`,
-    { path }
+    tapObj
   )
 
-  Logger.success(`Successfully linked tap '${name}' => '${path}'`)
+  Logger.success(`Successfully linked tap '${name}' => '${tapObj.path}'`)
   Logger.empty()
 
 }
 
-const addTapTasks = () => {
+/**
+ * Checks if there is a tasks folder, to load the kegs custom tasks
+ * @param {Object} globalConfig - Global config object for the keg-cli
+ * @param {Object} tapObj - Config object for the linked tap
+ * @param {string} tapObj.path - Path to the linked tap repo
+ * @param {string} tapObj.tasks - Path to the custom tasks file 
+ *
+ * @returns {string} - Path to the custom tasks index.js file
+ */
+const checkCustomTaskFile = async (globalConfig, tapObj) => {
+
+  // Search for the tasks folder within the location path
+  const [ foundPath ] = await findPathByName(
+    path.join(tapObj.path),
+    'tasks',
+    { type: 'folder' }
+  )
+
+  // Ensure we found a path to use
+  if(!foundPath || !foundPath.length) return false
+
+  // Check for the tasks index file
+  const indexFile = path.join(foundPath, 'index.js')
+  const indexFileExists = await checkPathExists(indexFile)
+
+  // If a container/tasks folder but no index file, log a warning
+  // Otherwise return the indexFile path
+  return !indexFileExists
+    ? Logger.warn(`Linked tap task folder exists, but index.js file is missing!`)
+    : indexFile
+
+}
+
+/**
+ * Checks for a current tap path, and compares with the passed in location
+ * <br/>Updates the tap location if they are different
+ * @param {Object} tapObj - Config object for the linked tap
+ * @param {string} tapObj.path - Path to the linked tap repo
+ * @param {string} tapObj.tasks - Path to the custom tasks file 
+ * @param {string} location - Global config object for the keg-cli
+ *
+ * @returns {string} - Path to the custom tasks index.js file
+ */
+const checkTapLocation = (tapObj, location) => {
+  if(!tapObj.path || tapObj.path !== location) tapObj.path = location
+
+  return tapObj
+}
+
+const buildTapObj = async (globalConfig, silent, name, location) => {
+
+  // Get the path to the tap link
+  const currentTap = get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }.${ name }`)
+  // Check if the link already exists, and if we should overwrite it
+  const addLink = await ensureAddLink(currentTap, name, location, silent)
+  // If no addLink then just return false
+  if(!addLink) return false
+
+  // Check and update the tap path if needed
+  const tapObj = checkTapLocation({ ...currentTap }, location)
+
+  // Check if there is a custom task file to add
+  const customTasksFile = await checkCustomTaskFile(globalConfig, tapObj)
+  customTasksFile && (tapObj.tasks = customTasksFile)
+
+  return tapObj
 
 }
 
@@ -65,12 +132,12 @@ const linkTap = async args => {
   const { command, globalConfig, options, params, tasks } = args
   const { name, location, silent } = params
 
-  // Check if the link already exists, and if we should overwrite it
-  const addLink = await ensureAddLink(globalConfig, name, silent)
+  // Try to build the tap object.
+  const tapObj = await buildTapObj(globalConfig, silent, name, location)
 
-  // Check if we should add the link, or log that the link was canceled!
-  addLink
-    ? addTapLink(globalConfig, name, location)
+  // Check if we should add the link or custom task file, or log that the link was canceled!
+  ;tapObj
+    ? addTapLink(globalConfig, name, tapObj)
     : !silent && (Logger.warn(`Tap link canceled!`) || Logger.empty())
 
 }
