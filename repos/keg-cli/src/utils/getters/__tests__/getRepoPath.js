@@ -15,7 +15,7 @@ globalConfig.cli.paths = {
 
 globalConfig.cli.taps = {
   ...globalConfig.cli.taps,
-  fake: fakeTapPath,
+  fake: { path: fakeTapPath },
 }
 
 describe('getRepoPath', () => {
