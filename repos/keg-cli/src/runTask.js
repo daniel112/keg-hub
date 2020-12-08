@@ -5,7 +5,6 @@ const { throwExitError } = require('KegUtils/error')
 const { hasHelpArg } = require('KegUtils/helpers/hasHelpArg')
 const { showHelp } = require('KegLog')
 
-
 /**
  * Runs a Keg CLI command
  *
@@ -14,25 +13,27 @@ const { showHelp } = require('KegLog')
  const runTask = async (globalConfig) => {
   try {
 
+    // Get the passed in arguments passed form the command line
     const [ command, ...args ] = process.argv.slice(2)
 
     // Load all possible tasks
-    const tasks = Tasks(globalConfig)
+    const cliTasks = Tasks(globalConfig)
 
     // If no command, or if the command is global help, then show help
-    if(!command || hasHelpArg(command)) return showHelp({ tasks })
+    if(!command || hasHelpArg(command)) return showHelp({ tasks: cliTasks })
 
-    // Get the task from available tasks
-    const { task, options, params } = await findTask(globalConfig, tasks, command, args)
+    // Get the taskData from available tasks
+    const taskData = await findTask(globalConfig, cliTasks, command, args)
 
-    await executeTask({
-      task,
-      tasks,
-      params,
-      options,
+    // Run the task and get the response
+    // Await the response to ensure the task completes before returning the response
+    const response = await executeTask({
+      ...taskData,
       command,
       globalConfig,
     })
+
+    return response
 
   }
   catch(err){

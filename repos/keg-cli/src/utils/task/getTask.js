@@ -79,10 +79,18 @@ const loopTasks = (tasks, options) => {
  * @param {Array} command - Name of the parent task to be run
  * @param {Array} options - All passed in options from the command line
  *
- * @returns {Object} - Found task, with updated options
+ * @returns {Object} - Found task, with updated options, and all loaded tasks
  */
 const getTask = (tasks, command, ...options) => {
-  return loopTasks(tasks, [ command, ...options ])
+  // Find the task data for the command and options
+  const taskData = loopTasks(tasks, [ command, ...options ])
+
+  // Injected taps can load custom tasks, that get merged with the internal cli tasks
+  // They then get passed to the getTask call
+  // To ensure we have access to the custom tasks, add them to the taskData object and return
+  taskData.tasks = tasks
+
+  return taskData
 }
 
 module.exports = {

@@ -19,7 +19,7 @@ const { TAP_LINKS } = GLOBAL_CONFIG_PATHS
  *
  * @returns {Object} - Found custom tasks
  */
-const getInjectedTasks = async (args, taskFile) => {
+const getCustomTasks = async (args, taskFile) => {
   try {
     const loaded = require(taskFile)
     const tasks = isFunc(loaded)
@@ -60,7 +60,7 @@ const checkLinkedTaps = async (globalConfig, tasks, command, options) => {
   // Load in the injected tasks
   const allTasks = !tapObj.tasks
     ? tasks
-    : await getInjectedTasks({
+    : await getCustomTasks({
         globalConfig,
         tasks,
         command,

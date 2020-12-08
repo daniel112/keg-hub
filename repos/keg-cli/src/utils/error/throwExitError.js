@@ -1,4 +1,5 @@
 const { Logger } = require('KegLog')
+const { toNum } = require('@keg-hub/jsutils')
 
 /**
  * Helper to print an error
@@ -13,7 +14,7 @@ const throwExitError = err => {
   Logger.error(`  ${err.stack}`)
   Logger.empty()
 
-  process.exit(1)
+  process.exit(toNum(err.status || 1))
 }
 
 module.exports = {
