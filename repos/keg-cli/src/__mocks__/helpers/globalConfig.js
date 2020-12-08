@@ -52,9 +52,7 @@ module.exports = {
       errorStack: false
     },
     taps: {
-      links: {
-        test: path.join(cliRoot, 'src/__mocks__/tap'),
-      }
+      test: { path: path.join(cliRoot, 'src/__mocks__/tap') },
     }
   }
 }

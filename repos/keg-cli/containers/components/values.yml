@@ -3,7 +3,7 @@ env:
   # --- LOCAL ENV CONTEXT --- #
 
   KEG_CONTEXT_PATH: "{{ cli.paths.components }}"
-  RETHEME_PATH: "{{ cli.taps.links.retheme }}"
+  RETHEME_PATH: "{{ cli.taps.retheme.path }}"
 
 
   # --- COMPONENTS ENV CONTEXT --- #

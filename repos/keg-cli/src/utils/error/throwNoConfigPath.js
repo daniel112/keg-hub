@@ -1,5 +1,5 @@
 const { Logger } = require('KegLog')
-const { get } = require('@keg-hub/jsutils')
+const { get, mapObj } = require('@keg-hub/jsutils')
 const { GLOBAL_CONFIG_PATHS } = require('KegConst/constants')
 const { throwTaskFailed } = require('./throwTaskFailed')
 
@@ -28,9 +28,14 @@ const throwNoConfigPath = (globalConfig, pathName) => {
 
   Logger.empty()
 
+  const linkPaths = {}
+  mapObj(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`, {}), (alias, tapConfig) => {
+    linkPaths[alias] = tapConfig.path
+  })
+
   Logger.cyan(`Linked Taps:`)
-  Logger.data(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`))
-  
+  Logger.data(linkPaths)
+
   Logger.empty()
 
   throwTaskFailed()

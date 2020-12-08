@@ -52,10 +52,10 @@ const listTaps = args => {
 
   Logger.subHeader(`Linked Taps`)
 
-  mapObj(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`, {}), (alias, path) => {
-    getTapInfo(path)
+  mapObj(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`, {}), (alias, tapConfig) => {
+    getTapInfo(tapConfig.path)
     printDetail('Alias', alias)
-    printDetail('Location', path)
+    printDetail('Location', tapConfig.path)
 
     Logger.empty()
   })

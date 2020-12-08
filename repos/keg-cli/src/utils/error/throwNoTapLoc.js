@@ -18,8 +18,13 @@ const throwNoTapLoc = (globalConfig, tap) => {
 
   Logger.empty()
 
+  const linkPaths = {}
+  mapObj(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`, {}), (alias, tapConfig) => {
+    linkPaths[alias] = tapConfig.path
+  })
+
   Logger.cyan(`Global Config Linked Tap Paths:`)
-  Logger.data(get(globalConfig, `${ GLOBAL_CONFIG_PATHS.TAP_LINKS }`))
+  Logger.data(linkPaths)
 
   Logger.empty()
 

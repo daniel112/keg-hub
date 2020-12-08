@@ -18,7 +18,7 @@ const { TAP_LINKS } = GLOBAL_CONFIG_PATHS
  */
 const checkLinkedTaps = async (globalConfig, tasks, command, options) => {
 
-  const tapPath = get(globalConfig, `${ TAP_LINKS }.${ command }`)
+  const tapPath = get(globalConfig, `${ TAP_LINKS }.${ command }.path`)
   // If no tap path was found, we have no task, so just return
   if(!tapPath) return false
 

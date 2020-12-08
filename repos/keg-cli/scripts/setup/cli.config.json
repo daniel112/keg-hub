@@ -21,10 +21,7 @@
         "rc": "tap-release-client"
       }
     },
-    "taps": {
-      "links": {
-      }
-    },
+    "taps": {},
     "settings": {
       "defaultEnv": "development",
       "docker": {

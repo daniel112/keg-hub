@@ -9,7 +9,7 @@ const { GLOBAL_CONFIG_PATHS } = require('KegConst/constants')
  * @returns {string} - Found path
  */
 const getTapPath = (globalConfig, tapName) => {
-  return get(globalConfig, `${GLOBAL_CONFIG_PATHS.TAP_LINKS}.${tapName}`)
+  return get(globalConfig, `${GLOBAL_CONFIG_PATHS.TAP_LINKS}.${tapName}.path`)
 }
 
 module.exports = {

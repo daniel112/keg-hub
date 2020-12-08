@@ -13,8 +13,8 @@ globalConfig.cli.paths = {
   components: testComponentsPath
 }
 
-globalConfig.cli.taps.links = {
-  ...globalConfig.cli.taps.links,
+globalConfig.cli.taps = {
+  ...globalConfig.cli.taps,
   fake: fakeTapPath,
 }
 

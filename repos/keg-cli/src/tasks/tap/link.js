@@ -39,11 +39,15 @@ const addTapLink = (globalConfig, name, path) => {
     globalConfig,
       // Build the path in the globalConfig where the link will be saved
     `${GLOBAL_CONFIG_PATHS.TAP_LINKS}.${name}`,
-    path
+    { path }
   )
 
   Logger.success(`Successfully linked tap '${name}' => '${path}'`)
   Logger.empty()
+
+}
+
+const addTapTasks = () => {
 
 }
 
@@ -61,7 +65,7 @@ const linkTap = async args => {
   const { command, globalConfig, options, params, tasks } = args
   const { name, location, silent } = params
 
-  // Check if the link alread exists, and if we should overwrite it
+  // Check if the link already exists, and if we should overwrite it
   const addLink = await ensureAddLink(globalConfig, name, silent)
 
   // Check if we should add the link, or log that the link was canceled!
