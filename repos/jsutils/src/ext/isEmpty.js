@@ -5,6 +5,7 @@ import { isArr } from '../array/isArr'
 import { isStr } from '../string/isStr'
 import { isNum } from '../number/isNum'
 
+
 /**
  * Checks if the value is empty.
  * @example

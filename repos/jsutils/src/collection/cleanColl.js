@@ -3,6 +3,7 @@
 import { isObj } from '../object/isObj'
 import { isColl } from './isColl'
 
+
 /**
  * Cleans a collection by creating a new collection
  * With the null and undefined values removed

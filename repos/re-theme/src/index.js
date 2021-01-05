@@ -3,6 +3,7 @@ import { ReThemeContext } from './context/reThemeContext'
 import { ReThemeProvider } from './context/reThemeProvider'
 import { setRNPlatform } from './context/platform'
 
+
 import {
   getSize,
   getSizeMap,
