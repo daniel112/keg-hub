@@ -23,10 +23,29 @@ jobs:
       - name: "Generate PR Changes"
         id: generate-pr-changes
         run: bash scripts/ci/generatePRChanges.sh
-      - name: "Add Comment To PR"
-        uses: harupy/comment-on-pr@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: "Add Comment To PR"
+      #   uses: peter-evans/create-or-update-comment@v1
+      - name: Find Comment
+        uses: peter-evans/find-comment@v1
+        id: fc
         with:
-          filename: template.md
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '### Changed Files'
+
+      - name: Create comment
+        if: ${{ steps.fc.outputs.comment-id == 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ${{ steps.generate-pr-changes.outputs.pr-changes }}
+
+      - name: Update comment
+        if: ${{ steps.fc.outputs.comment-id != 0 }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: |
+            ${{ steps.generate-pr-changes.outputs.pr-changes }}
 
