@@ -2,7 +2,7 @@
 
 import { validate } from '../validation'
 import { isArr } from './isArr'
-
+console.log('test')
 /**
  * Builds a map of elements mapped to their frequency counts
  * @param {Array<*>} arr 
