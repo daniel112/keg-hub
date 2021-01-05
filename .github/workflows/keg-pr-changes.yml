@@ -38,14 +38,12 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ${{ steps.generate-pr-changes.outputs.pr-changes }}
+          body: ${{ steps.generate-pr-changes.outputs.pr-changes }}
 
       - name: Update comment
         if: ${{ steps.fc.outputs.comment-id != 0 }}
         uses: peter-evans/create-or-update-comment@v1
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
-          body: |
-            ${{ steps.generate-pr-changes.outputs.pr-changes }}
+          body: ${{ steps.generate-pr-changes.outputs.pr-changes }}
 

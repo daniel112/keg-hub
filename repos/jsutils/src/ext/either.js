@@ -4,6 +4,8 @@ import { softFalsy } from '../boolean/softFalsy'
 import { isFunc } from '../method/isFunc'
 
 
+
+
 /**
  * Determines the correct value to return, by calling the passed in check function.
  * <br> If no check function, then it uses the softFalsy method.
