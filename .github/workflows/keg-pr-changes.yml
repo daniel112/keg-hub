@@ -40,7 +40,7 @@ jobs:
         id: find-comment
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
+          comment-author: 'github-actions-changed-files[bot]'
           body-includes: '### Changed Files'
 
       - name: "Create comment"
@@ -49,6 +49,7 @@ jobs:
         id: create-comment
         with:
           issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions-changed-files[bot]'
           body: ${{ steps.get-comment-body.outputs.body }}
 
       - name: "Update comment"
@@ -58,4 +59,5 @@ jobs:
         with:
           edit-mode: replace
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          comment-author: 'github-actions-changed-files[bot]'
           body: ${{ steps.get-comment-body.outputs.body }}
