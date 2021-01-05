@@ -30,7 +30,6 @@ jobs:
             repos/**/node_modules
           key: ${{ runner.os }}-modules-${{ hashFiles('repos/**/yarn.lock') }}
       - name: Install Yarn Dependencies
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
         run: bash scripts/ci/runYarnCmd.sh "install"
       - name: "Run Repo Tests"
         id: run-repo-tests
