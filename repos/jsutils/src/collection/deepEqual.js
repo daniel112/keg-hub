@@ -4,7 +4,7 @@
 const isArray = Array.isArray
 const keyList = Object.keys
 const hasProp = Object.prototype.hasOwnProperty
-
+console.log('jsutils')
 /**
  * Recursively checks if two collections are equal
  * <br/>Faster the JSON.stringify checks
