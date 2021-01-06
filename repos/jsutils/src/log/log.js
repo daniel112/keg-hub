@@ -1,7 +1,7 @@
 /** @module log */
 
 'use strict'
-
+console.log('test')
 let SHOW_LOGS
 let METH_DEF = 'dir'
 let PREFIX = 'type'
