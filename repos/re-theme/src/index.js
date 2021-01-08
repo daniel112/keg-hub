@@ -2,7 +2,7 @@ import { setRNDimensions } from './dimensions/dimensions'
 import { ReThemeContext } from './context/reThemeContext'
 import { ReThemeProvider } from './context/reThemeProvider'
 import { setRNPlatform } from './context/platform'
-
+console.log('retheme')
 import {
   getSize,
   getSizeMap,
